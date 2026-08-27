@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Berchalvis Manzenza — Communicateur Visuel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+--noir:#060606;
+--blanc:#ffffff;
+--g1:#0e0e0e;
+--g2:#161616;
+--g3:#1e1e1e;
+--g4:#2a2a2a;
+}
+html{scroll-behavior:smooth;}
+body{
+background:var(--noir);color:var(--blanc);
+font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+overflow-x:hidden;cursor:none;
+}
+::selection{background:rgba(255,255,255,0.15);}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--noir);}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);}
+
+/* CURSOR */
+#cur{
+position:fixed;width:6px;height:6px;background:#fff;
+border-radius:50%;pointer-events:none;z-index:99999;
+transform:translate(-50%,-50%);mix-blend-mode:difference;
+transition:transform .2s,width .3s,height .3s;
+}
+#cur2{
+position:fixed;width:40px;height:40px;
+border:1px solid rgba(255,255,255,0.35);
+border-radius:50%;pointer-events:none;z-index:99998;
+transform:translate(-50%,-50%);mix-blend-mode:difference;
+transition:width .4s,height .4s,border-color .4s;
+}
+
+/* LOADER */
+#loader{
+position:fixed;inset:0;background:var(--noir);z-index:99997;
+display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:0;overflow:hidden;
+transition:opacity .8s ease,visibility .8s ease;
+}
+#loader.hide{opacity:0;visibility:hidden;}
+.ld-curtain{
+position:absolute;inset:0;background:#fff;
+transform:scaleY(1);transform-origin:top;
+transition:transform 1s cubic-bezier(.76,0,.24,1) .3s;
+}
+#loader.reveal-ld .ld-curtain{transform:scaleY(0);}
+.ld-inner{
+position:relative;z-index:2;display:flex;
+flex-direction:column;align-items:center;gap:28px;
+}
+.ld-name{
+font-size:clamp(1.2rem,3.5vw,2.2rem);font-weight:900;
+letter-spacing:8px;text-transform:uppercase;
+opacity:0;transform:translateY(20px);
+transition:all .6s ease .4s;
+}
+#loader.reveal-ld .ld-name{opacity:1;transform:translateY(0);}
+.ld-line-wrap{width:180px;height:1px;background:rgba(255,255,255,0.1);}
+.ld-line{height:1px;background:#fff;width:0;transition:width 2.2s ease;}
+.ld-num{font-size:.6rem;letter-spacing:5px;color:rgba(255,255,255,0.3);}
+
+/* NAV */
+nav{
+position:fixed;top:0;left:0;right:0;z-index:9000;
+padding:0 clamp(20px,5vw,70px);height:70px;
+display:flex;align-items:center;justify-content:space-between;
+transition:background .4s,backdrop-filter .4s;
+}
+nav.scrolled{
+background:rgba(6,6,6,0.96);backdrop-filter:blur(20px);
+border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.nav-logo{
+font-size:.82rem;font-weight:900;letter-spacing:5px;
+text-transform:uppercase;cursor:pointer;transition:opacity .3s;
+}
+.nav-logo:hover{opacity:.6;}
+.nav-links{display:flex;gap:clamp(16px,3vw,44px);list-style:none;}
+.nav-links a{
+color:rgba(255,255,255,0.4);text-decoration:none;
+font-size:.68rem;letter-spacing:2.5px;text-transform:uppercase;
+font-weight:500;cursor:pointer;position:relative;
+transition:color .35s;padding-bottom:4px;
+}
+.nav-links a::after{
+content:'';position:absolute;bottom:0;left:0;width:0;
+height:1px;background:#fff;transition:width .4s ease;
+}
+.nav-links a:hover,.nav-links a.act{color:#fff;}
+.nav-links a:hover::after,.nav-links a.act::after{width:100%;}
+.burger{
+display:none;flex-direction:column;gap:6px;
+cursor:pointer;z-index:9100;padding:4px;
+}
+.burger span{
+width:24px;height:1.5px;background:#fff;
+transition:all .4s cubic-bezier(.76,0,.24,1);display:block;
+}
+.burger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.burger.open span:nth-child(2){opacity:0;transform:scaleX(0);}
+.burger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+.mob-menu{
+position:fixed;inset:0;background:var(--noir);z-index:9050;
+display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:8px;
+transform:translateX(100%);
+transition:transform .7s cubic-bezier(.76,0,.24,1);
+}
+.mob-menu.open{transform:translateX(0);}
+.mob-menu a{
+font-size:clamp(2rem,8vw,4rem);font-weight:900;
+letter-spacing:-1px;color:rgba(255,255,255,0.15);
+text-decoration:none;cursor:pointer;
+transition:color .3s;line-height:1.2;
+}
+.mob-menu a:hover{color:#fff;}
+
+/* PAGES */
+.pg{display:none;min-height:100vh;}
+.pg.act{display:block;animation:pgIn .7s cubic-bezier(.25,.46,.45,.94) both;}
+@keyframes pgIn{
+from{opacity:0;transform:translateY(40px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+/* REVEAL */
+.rv{opacity:0;transform:translateY(50px);transition:opacity .9s ease,transform .9s ease;}
+.rv.vis{opacity:1;transform:translateY(0);}
+.rv-l{opacity:0;transform:translateX(-50px);transition:opacity .9s ease,transform .9s ease;}
+.rv-l.vis{opacity:1;transform:translateX(0);}
+.rv-r{opacity:0;transform:translateX(50px);transition:opacity .9s ease,transform .9s ease;}
+.rv-r.vis{opacity:1;transform:translateX(0);}
+.rv-d1{transition-delay:.1s!important;}
+.rv-d2{transition-delay:.2s!important;}
+.rv-d3{transition-delay:.3s!important;}
+.rv-d4{transition-delay:.4s!important;}
+
+/* SHARED */
+.section{padding:clamp(80px,10vh,140px) clamp(20px,5vw,80px);}
+.s-eyebrow{
+font-size:.6rem;letter-spacing:6px;text-transform:uppercase;
+color:rgba(255,255,255,0.3);margin-bottom:16px;
+}
+.s-title{
+font-size:clamp(2.2rem,5.5vw,5rem);font-weight:900;
+letter-spacing:-2px;line-height:.95;margin-bottom:60px;
+}
+.s-title em{font-style:normal;color:rgba(255,255,255,0.2);}
+
+.btn-main{
+display:inline-flex;align-items:center;gap:14px;
+padding:15px 42px;background:#fff;color:var(--noir);
+font-size:.68rem;letter-spacing:3px;text-transform:uppercase;
+font-weight:700;cursor:pointer;border:none;
+position:relative;overflow:hidden;transition:color .5s;
+}
+.btn-main::before{
+content:'';position:absolute;inset:0;background:var(--noir);
+transform:scaleX(0);transform-origin:right;
+transition:transform .5s cubic-bezier(.76,0,.24,1);z-index:0;
+}
+.btn-main:hover::before{transform:scaleX(1);}
+.btn-main:hover{color:#fff;}
+.btn-main span,.btn-main .ic{position:relative;z-index:1;}
+.btn-main .ic{transition:transform .4s ease;}
+.btn-main:hover .ic{transform:translateX(6px);}
+
+.btn-ghost{
+display:inline-flex;align-items:center;gap:14px;
+padding:14px 38px;background:transparent;color:#fff;
+border:1px solid rgba(255,255,255,0.2);
+font-size:.68rem;letter-spacing:3px;text-transform:uppercase;
+font-weight:600;cursor:pointer;
+position:relative;overflow:hidden;transition:color .5s,border-color .3s;
+}
+.btn-ghost::before{
+content:'';position:absolute;inset:0;background:#fff;
+transform:scaleX(0);transform-origin:left;
+transition:transform .5s cubic-bezier(.76,0,.24,1);z-index:0;
+}
+.btn-ghost:hover::before{transform:scaleX(1);}
+.btn-ghost:hover{color:var(--noir);border-color:#fff;}
+.btn-ghost span,.btn-ghost .ic{position:relative;z-index:1;}
+.btn-ghost .ic{transition:transform .4s ease;}
+.btn-ghost:hover .ic{transform:translateX(6px);}
+
+.back-btn{
+display:inline-flex;align-items:center;gap:12px;
+background:transparent;border:none;color:rgba(255,255,255,0.35);
+font-size:.65rem;letter-spacing:3px;text-transform:uppercase;
+cursor:pointer;margin-bottom:56px;transition:color .3s;padding:0;
+}
+.back-btn:hover{color:#fff;}
+.back-btn .ic-back{transition:transform .3s;}
+.back-btn:hover .ic-back{transform:translateX(-6px);}
+.hr{height:1px;background:rgba(255,255,255,0.06);margin:0 clamp(20px,5vw,80px);}
+
+/* IMAGE BOX */
+.img-box{
+position:relative;overflow:hidden;background:var(--g2);
+border:1px solid rgba(255,255,255,0.06);
+display:flex;align-items:center;justify-content:center;
+}
+.img-box img{
+width:100%;height:100%;object-fit:cover;
+position:absolute;inset:0;
+transition:transform .6s ease;
+}
+.img-box:hover img{transform:scale(1.04);}
+
+/* FOOTER */
+footer{
+padding:28px clamp(20px,5vw,80px);
+border-top:1px solid rgba(255,255,255,0.05);
+display:flex;align-items:center;justify-content:space-between;
+flex-wrap:wrap;gap:16px;background:var(--g1);
+}
+.ft-logo{font-size:.78rem;font-weight:900;letter-spacing:5px;cursor:pointer;}
+.ft-copy{font-size:.58rem;letter-spacing:2px;color:rgba(255,255,255,0.2);}
+.ft-socs{display:flex;gap:10px;}
+.ft-s{
+width:34px;height:34px;border:1px solid rgba(255,255,255,0.12);
+display:flex;align-items:center;justify-content:center;
+font-size:.6rem;font-weight:800;cursor:pointer;
+transition:all .3s;color:#fff;text-decoration:none;
+}
+.ft-s:hover{background:#fff;color:var(--noir);}
+
+/* ══ HOME HERO ══ */
+.hero{
+min-height:100vh;display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+padding:0 clamp(20px,5vw,80px);
+text-align:center;position:relative;overflow:hidden;
+}
+.hero-grid{
+position:absolute;inset:0;
+background-image:
+linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),
+linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+background-size:80px 80px;
+mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,black,transparent);
+animation:gridPan 20s linear infinite;
+}
+@keyframes gridPan{from{background-position:0 0;}to{background-position:80px 80px;}}
+.hero-orb{
+position:absolute;border-radius:50%;filter:blur(80px);
+pointer-events:none;animation:orbFloat 12s ease-in-out infinite;
+}
+.hero-orb:nth-child(1){
+width:500px;height:500px;
+background:radial-gradient(circle,rgba(255,255,255,0.04),transparent 70%);
+top:-100px;left:-150px;animation-delay:0s;
+}
+.hero-orb:nth-child(2){
+width:400px;height:400px;
+background:radial-gradient(circle,rgba(255,255,255,0.04),transparent 70%);
+bottom:-80px;right:-100px;animation-delay:5s;
+}
+@keyframes orbFloat{
+0%,100%{transform:translate(0,0);}
+33%{transform:translate(30px,-20px);}
+66%{transform:translate(-20px,30px);}
+}
+.hero-eyebrow{
+font-size:.62rem;letter-spacing:7px;text-transform:uppercase;
+color:rgba(255,255,255,0.3);margin-bottom:32px;
+animation:fadeUp .8s .4s both;
+}
+.hero-name{
+font-size:clamp(3.5rem,10vw,9rem);font-weight:900;
+line-height:.9;letter-spacing:-4px;
+animation:fadeUp .9s .55s both;
+}
+.hero-name em{
+font-style:normal;display:block;
+color:rgba(255,255,255,0.18);
+font-size:clamp(2.5rem,7vw,6.5rem);
+}
+.hero-role{
+font-size:clamp(.75rem,1.2vw,.88rem);letter-spacing:4px;
+text-transform:uppercase;color:rgba(255,255,255,0.3);
+margin:28px 0 48px;animation:fadeUp .8s .7s both;
+}
+.hero-btns{
+display:flex;gap:14px;flex-wrap:wrap;
+justify-content:center;animation:fadeUp .8s .85s both;
+}
+.hero-scroll{
+position:absolute;bottom:32px;left:clamp(20px,5vw,80px);
+display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+animation:fadeUp .8s 1s both;
+}
+.hero-scroll span{
+font-size:.55rem;letter-spacing:4px;text-transform:uppercase;
+color:rgba(255,255,255,0.25);writing-mode:vertical-rl;
+}
+.scroll-track{width:1px;height:70px;background:rgba(255,255,255,0.1);position:relative;overflow:hidden;}
+.scroll-thumb{
+position:absolute;top:-100%;left:0;width:1px;height:50%;
+background:#fff;animation:scrollTrack 2.5s ease-in-out infinite;
+}
+@keyframes scrollTrack{0%{top:-50%;}100%{top:150%;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══ HOME SERVICES ══ */
+.services-wrap{
+display:grid;grid-template-columns:repeat(4,1fr);
+gap:1px;background:rgba(255,255,255,0.05);
+}
+.srv-tile{
+background:var(--noir);padding:clamp(30px,4vw,56px) clamp(24px,3vw,44px);
+position:relative;overflow:hidden;transition:background .5s;cursor:default;
+}
+.srv-tile::after{
+content:'';position:absolute;bottom:0;left:0;
+width:0;height:2px;background:#fff;transition:width .5s ease;
+}
+.srv-tile:hover::after{width:100%;}
+.srv-tile:hover{background:var(--g2);}
+.srv-n{font-size:.55rem;letter-spacing:4px;color:rgba(255,255,255,0.18);margin-bottom:40px;}
+.srv-ic{
+font-size:1.6rem;margin-bottom:22px;display:inline-block;
+transition:transform .4s ease;
+}
+.srv-tile:hover .srv-ic{transform:translateY(-4px);}
+.srv-nm{font-size:clamp(.9rem,1.4vw,1.1rem);font-weight:700;letter-spacing:-.3px;margin-bottom:10px;}
+.srv-desc{font-size:.75rem;color:rgba(255,255,255,0.3);line-height:1.7;}
+
+/* ══ TICKER ══ */
+.ticker-sec{
+padding:clamp(50px,7vh,90px) 0;
+border-top:1px solid rgba(255,255,255,0.05);
+border-bottom:1px solid rgba(255,255,255,0.05);
+overflow:hidden;
+}
+.ticker-label{
+text-align:center;font-size:.58rem;letter-spacing:6px;
+text-transform:uppercase;color:rgba(255,255,255,0.2);
+margin-bottom:36px;
+}
+.ticker-track{overflow:hidden;position:relative;}
+.ticker-track::before,.ticker-track::after{
+content:'';position:absolute;top:0;bottom:0;width:180px;z-index:2;pointer-events:none;
+}
+.ticker-track::before{left:0;background:linear-gradient(to right,var(--noir),transparent);}
+.ticker-track::after{right:0;background:linear-gradient(to left,var(--noir),transparent);}
+.ticker-belt{
+display:flex;width:max-content;
+animation:belt 30s linear infinite;
+}
+.ticker-belt:hover{animation-play-state:paused;}
+@keyframes belt{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.tick-logo{
+width:160px;height:80px;margin:0 20px;flex-shrink:0;
+background:var(--g2);border:1px solid rgba(255,255,255,0.06);
+display:flex;align-items:center;justify-content:center;
+position:relative;overflow:hidden;
+transition:border-color .3s;
+}
+.tick-logo:hover{border-color:rgba(255,255,255,0.2);}
+.tick-logo img{
+width:100%;height:100%;object-fit:contain;
+padding:16px;
+}
+
+/* ══ CTA BAND ══ */
+.cta-band{
+padding:clamp(100px,14vh,180px) clamp(20px,5vw,80px);
+text-align:center;position:relative;overflow:hidden;
+}
+.cta-band h2{
+font-size:clamp(2.5rem,7vw,7rem);font-weight:900;
+letter-spacing:-3px;line-height:.9;margin-bottom:36px;
+}
+.cta-band h2 em{font-style:normal;color:rgba(255,255,255,0.15);}
+.cta-band p{
+font-size:clamp(.78rem,1.1vw,.9rem);color:rgba(255,255,255,0.35);
+max-width:440px;margin:0 auto 48px;line-height:1.85;
+}
+.cta-line{
+position:absolute;top:50%;left:50%;
+border:1px solid rgba(255,255,255,0.03);border-radius:50%;
+transform:translate(-50%,-50%);pointer-events:none;
+}
+.cta-line:nth-child(1){width:600px;height:600px;animation:ctaSpin 25s linear infinite;}
+.cta-line:nth-child(2){width:400px;height:400px;animation:ctaSpin 18s linear infinite reverse;}
+@keyframes ctaSpin{
+from{transform:translate(-50%,-50%) rotate(0);}
+to{transform:translate(-50%,-50%) rotate(360deg);}
+}
+
+/* ══ ABOUT ══ */
+.about-hero-wrap{
+display:grid;grid-template-columns:1fr 1fr;
+gap:clamp(40px,6vw,100px);align-items:center;
+min-height:90vh;
+padding:clamp(80px,10vh,130px) clamp(20px,5vw,80px);
+}
+.about-photo{position:relative;aspect-ratio:3/4;}
+.about-photo .img-box{width:100%;height:100%;}
+.about-photo-badge{
+position:absolute;bottom:-20px;right:-20px;
+background:#fff;color:var(--noir);
+padding:20px 24px;text-align:center;
+}
+.about-photo-badge strong{font-size:2.2rem;font-weight:900;display:block;line-height:1;}
+.about-photo-badge span{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;}
+.about-photo-frame{
+position:absolute;top:20px;left:20px;right:-20px;bottom:-20px;
+border:1px solid rgba(255,255,255,0.08);z-index:-1;pointer-events:none;
+}
+.about-text .tag{
+font-size:.58rem;letter-spacing:6px;text-transform:uppercase;
+color:rgba(255,255,255,0.25);margin-bottom:20px;
+}
+.about-text h1{
+font-size:clamp(2rem,4.5vw,4rem);font-weight:900;
+letter-spacing:-2px;line-height:.95;margin-bottom:30px;
+}
+.about-text h1 em{font-style:normal;color:rgba(255,255,255,0.2);}
+.about-text p{
+font-size:clamp(.82rem,1.1vw,.92rem);
+color:rgba(255,255,255,0.45);line-height:1.95;margin-bottom:18px;
+}
+.about-stats{
+display:grid;grid-template-columns:repeat(3,1fr);
+gap:1px;background:rgba(255,255,255,0.05);margin:36px 0;
+}
+.a-stat{
+background:var(--noir);padding:24px 20px;
+border-bottom:2px solid rgba(255,255,255,0.06);
+transition:border-color .3s;
+}
+.a-stat:hover{border-bottom-color:rgba(255,255,255,0.4);}
+.a-stat strong{
+font-size:clamp(1.6rem,3vw,2.4rem);font-weight:900;
+letter-spacing:-1px;display:block;line-height:1;
+}
+.a-stat span{font-size:.58rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.3);}
+
+/* SKILLS */
+.skills-wrap{padding:clamp(60px,8vh,110px) clamp(20px,5vw,80px);background:var(--g1);}
+.skill-row{
+display:flex;align-items:center;gap:30px;
+padding:22px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.skill-row:first-child{border-top:1px solid rgba(255,255,255,0.05);}
+.skill-name{
+font-size:.75rem;letter-spacing:2px;text-transform:uppercase;
+width:200px;flex-shrink:0;color:rgba(255,255,255,0.5);
+}
+.skill-track{flex:1;height:1px;background:rgba(255,255,255,0.08);position:relative;}
+.skill-fill{
+position:absolute;left:0;top:0;height:1px;background:#fff;
+width:0;transition:width 1.6s cubic-bezier(.25,.46,.45,.94);
+}
+.skill-pct{font-size:.6rem;letter-spacing:2px;color:rgba(255,255,255,0.3);width:40px;text-align:right;flex-shrink:0;}
+
+/* VALUES */
+.values-grid{
+display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:1px;background:rgba(255,255,255,0.05);margin-top:56px;
+}
+.val-c{
+background:var(--noir);padding:clamp(32px,4vw,52px) clamp(24px,3vw,42px);
+position:relative;transition:background .4s;cursor:default;overflow:hidden;
+}
+.val-c::before{
+content:'';position:absolute;left:0;top:0;bottom:0;
+width:2px;background:rgba(255,255,255,0.08);transition:background .4s;
+}
+.val-c:hover{background:var(--g2);}
+.val-c:hover::before{background:rgba(255,255,255,0.5);}
+.val-n{font-size:.55rem;letter-spacing:4px;color:rgba(255,255,255,0.15);margin-bottom:32px;}
+.val-title{font-size:clamp(1rem,1.5vw,1.2rem);font-weight:800;letter-spacing:-.3px;margin-bottom:12px;}
+.val-body{font-size:.78rem;color:rgba(255,255,255,0.35);line-height:1.8;}
+
+/* ══ SERVICES PAGE ══ */
+.srv-list{display:flex;flex-direction:column;gap:1px;margin-top:60px;}
+.srv-block{
+display:grid;grid-template-columns:1fr 1fr;
+background:var(--g1);min-height:400px;overflow:hidden;
+}
+.srv-block.reverse .srv-block-img{order:2;}
+.srv-block.reverse .srv-block-info{order:1;}
+.srv-block-img{position:relative;min-height:320px;overflow:hidden;}
+.srv-block-img .img-box{width:100%;height:100%;position:absolute;inset:0;}
+.srv-block-info{
+padding:clamp(36px,5vw,70px) clamp(28px,4vw,60px);
+display:flex;flex-direction:column;justify-content:center;gap:20px;
+border-left:1px solid rgba(255,255,255,0.04);
+}
+.srv-block.reverse .srv-block-info{
+border-left:none;border-right:1px solid rgba(255,255,255,0.04);
+}
+.srv-block-n{font-size:.55rem;letter-spacing:5px;color:rgba(255,255,255,0.18);}
+.srv-block-title{
+font-size:clamp(1.5rem,2.8vw,2.4rem);font-weight:900;
+letter-spacing:-1px;line-height:1;
+}
+.srv-block-title em{font-style:normal;color:rgba(255,255,255,0.2);}
+.srv-block-body{font-size:.8rem;color:rgba(255,255,255,0.38);line-height:1.85;}
+
+/* SERVICE DETAIL */
+.srv-detail-wrap{padding:clamp(40px,6vh,90px) clamp(20px,5vw,80px);}
+.det-header{margin-bottom:60px;}
+.det-title{
+font-size:clamp(2.5rem,6vw,5.5rem);font-weight:900;
+letter-spacing:-3px;line-height:.9;margin-bottom:20px;
+}
+.det-title em{font-style:normal;color:rgba(255,255,255,0.15);}
+.det-body{
+font-size:clamp(.82rem,1.1vw,.95rem);color:rgba(255,255,255,0.38);
+line-height:1.95;max-width:680px;
+}
+.det-imgs{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;}
+.det-img-box{aspect-ratio:3/4;}
+
+/* ══ PORTFOLIO ══ */
+.port-cats{display:flex;flex-direction:column;gap:1px;margin-top:60px;}
+.port-cat{
+display:grid;grid-template-columns:5fr 4fr;
+background:var(--g1);min-height:340px;overflow:hidden;
+cursor:default;transition:background .4s;
+}
+.port-cat:nth-child(even){grid-template-columns:4fr 5fr;}
+.port-cat:nth-child(even) .pc-info{order:2;}
+.port-cat:nth-child(even) .pc-thumb{order:1;}
+.port-cat:hover{background:var(--g2);}
+.pc-info{
+padding:clamp(36px,5vw,70px) clamp(28px,4vw,60px);
+display:flex;flex-direction:column;justify-content:space-between;
+border-right:1px solid rgba(255,255,255,0.04);
+}
+.port-cat:nth-child(even) .pc-info{
+border-right:none;border-left:1px solid rgba(255,255,255,0.04);
+}
+.pc-n{font-size:.55rem;letter-spacing:5px;color:rgba(255,255,255,0.18);margin-bottom:24px;}
+.pc-title{
+font-size:clamp(1.4rem,2.8vw,2.4rem);font-weight:900;
+letter-spacing:-1px;margin-bottom:12px;line-height:1;
+}
+.pc-title em{font-style:normal;color:rgba(255,255,255,0.18);}
+.pc-desc{font-size:.78rem;color:rgba(255,255,255,0.35);line-height:1.8;margin-bottom:28px;flex:1;}
+.pc-thumb{
+display:grid;grid-template-columns:1fr 1fr;gap:1px;
+background:rgba(255,255,255,0.04);overflow:hidden;
+}
+.pc-mini{
+background:var(--g2);overflow:hidden;min-height:140px;
+position:relative;
+}
+.pc-mini img{
+width:100%;height:100%;object-fit:cover;
+position:absolute;inset:0;
+transition:transform .5s ease;
+}
+.pc-mini:hover img{transform:scale(1.06);}
+
+/* PORT DETAIL */
+.port-detail-wrap{padding:clamp(40px,6vh,90px) clamp(20px,5vw,80px);}
+.port-masonry{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(clamp(180px,26vw,320px),1fr));
+gap:2px;margin-top:56px;
+}
+.p-item{
+aspect-ratio:4/3;position:relative;overflow:hidden;
+background:var(--g2);cursor:pointer;
+}
+.p-item img{
+width:100%;height:100%;object-fit:cover;
+position:absolute;inset:0;
+transition:transform .7s ease;
+}
+.p-item:hover img{transform:scale(1.07);}
+.p-item-ov{
+position:absolute;inset:0;background:rgba(6,6,6,0.82);
+display:flex;flex-direction:column;align-items:flex-start;
+justify-content:flex-end;padding:22px;
+opacity:0;transition:opacity .4s ease;
+}
+.p-item:hover .p-item-ov{opacity:1;}
+.p-item-ov h4{
+font-size:.85rem;font-weight:700;
+transform:translateY(12px);transition:transform .4s;
+}
+.p-item-ov p{
+font-size:.6rem;letter-spacing:2px;text-transform:uppercase;
+color:rgba(255,255,255,0.35);
+transform:translateY(12px);transition:transform .4s .06s;
+}
+.p-item:hover .p-item-ov h4,.p-item:hover .p-item-ov p{transform:translateY(0);}
+
+/* ══ PUBLICATIONS ══ */
+.pub-list{display:flex;flex-direction:column;gap:1px;margin-top:60px;}
+.pub-block{
+display:grid;grid-template-columns:1fr 1fr;
+background:var(--g1);min-height:360px;overflow:hidden;
+}
+.pub-block:nth-child(even) .pub-img{order:2;}
+.pub-block:nth-child(even) .pub-info{order:1;}
+.pub-img{position:relative;min-height:280px;overflow:hidden;background:var(--g2);}
+.pub-img .img-box{width:100%;height:100%;position:absolute;inset:0;}
+.pub-info{
+padding:clamp(36px,5vw,70px) clamp(28px,4vw,60px);
+display:flex;flex-direction:column;justify-content:center;gap:16px;
+border-left:1px solid rgba(255,255,255,0.04);
+}
+.pub-date{font-size:.58rem;letter-spacing:4px;color:rgba(255,255,255,0.2);}
+.pub-cat{
+display:inline-block;padding:5px 14px;
+border:1px solid rgba(255,255,255,0.12);
+font-size:.58rem;letter-spacing:2px;text-transform:uppercase;
+color:rgba(255,255,255,0.3);
+}
+.pub-title{
+font-size:clamp(1.1rem,2vw,1.7rem);font-weight:800;
+letter-spacing:-.5px;line-height:1.2;
+}
+.pub-excerpt{font-size:.78rem;color:rgba(255,255,255,0.35);line-height:1.8;}
+.pub-read{
+display:inline-flex;align-items:center;gap:10px;
+font-size:.62rem;letter-spacing:3px;text-transform:uppercase;
+color:rgba(255,255,255,0.3);transition:color .3s;
+cursor:pointer;background:transparent;border:none;padding:0;
+}
+.pub-read:hover{color:#fff;}
+.pub-read .ic{transition:transform .3s;}
+.pub-read:hover .ic{transform:translateX(5px);}
+
+/* ══ CONTACT ══ */
+.contact-wrap{
+display:grid;grid-template-columns:1fr 1fr;
+gap:clamp(40px,6vw,100px);margin-top:60px;
+}
+.c-left h3{
+font-size:clamp(1.5rem,3vw,2.5rem);font-weight:900;
+letter-spacing:-1.5px;margin-bottom:18px;line-height:1;
+}
+.c-left h3 em{font-style:normal;color:rgba(255,255,255,0.18);}
+.c-left p{font-size:.82rem;color:rgba(255,255,255,0.38);line-height:1.9;margin-bottom:44px;}
+.c-items{display:flex;flex-direction:column;gap:22px;}
+.c-item{display:flex;gap:16px;align-items:flex-start;}
+.c-ic{
+width:40px;height:40px;flex-shrink:0;
+border:1px solid rgba(255,255,255,0.1);
+display:flex;align-items:center;justify-content:center;
+font-size:.85rem;transition:all .3s;
+}
+.c-ic:hover{background:#fff;color:var(--noir);}
+.c-t .lbl{font-size:.55rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:3px;}
+.c-t .val{font-size:.82rem;color:#fff;}
+.c-form{display:flex;flex-direction:column;gap:20px;}
+.fg{position:relative;}
+.fg input,.fg textarea{
+width:100%;background:transparent;
+border:none;border-bottom:1px solid rgba(255,255,255,0.12);
+padding:14px 0;color:#fff;font-size:.88rem;
+font-family:inherit;outline:none;transition:border-color .35s;
+}
+.fg textarea{height:100px;resize:none;}
+.fg input:focus,.fg textarea:focus{border-color:rgba(255,255,255,0.5);}
+.fg label{
+position:absolute;top:14px;left:0;font-size:.68rem;
+letter-spacing:2.5px;text-transform:uppercase;
+color:rgba(255,255,255,0.25);pointer-events:none;transition:all .35s;
+}
+.fg input:focus+label,.fg input:not(:placeholder-shown)+label,
+.fg textarea:focus+label,.fg textarea:not(:placeholder-shown)+label{
+top:-8px;font-size:.55rem;color:rgba(255,255,255,0.5);
+}
+.fg input::placeholder,.fg textarea::placeholder{color:transparent;}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+.services-wrap{grid-template-columns:repeat(2,1fr);}
+.about-hero-wrap{grid-template-columns:1fr;min-height:auto;}
+.about-photo{max-width:380px;margin:0 auto;}
+.srv-block,.pub-block{grid-template-columns:1fr;}
+.srv-block.reverse .srv-block-img,
+.srv-block.reverse .srv-block-info{order:unset;}
+.pub-block:nth-child(even) .pub-img,
+.pub-block:nth-child(even) .pub-info{order:unset;}
+.port-cat,.port-cat:nth-child(even){grid-template-columns:1fr;}
+.port-cat:nth-child(even) .pc-info,
+.port-cat:nth-child(even) .pc-thumb{order:unset;}
+.contact-wrap{grid-template-columns:1fr;}
+.det-imgs{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:640px){
+.nav-links{display:none;}
+.burger{display:flex;}
+.services-wrap{grid-template-columns:1fr 1fr;}
+.det-imgs{grid-template-columns:1fr;}
+.port-masonry{grid-template-columns:1fr 1fr;}
+.hero-name{letter-spacing:-2px;}
+.s-title{letter-spacing:-1px;}
+}
+@media(max-width:480px){
+.services-wrap{grid-template-columns:1fr;}
+.port-masonry{grid-template-columns:1fr 1fr;}
+.pub-block{grid-template-columns:1fr;}
+footer{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<!-- LOADER -->
+<div id="loader">
+<div class="ld-curtain"></div>
+<div class="ld-inner">
+<div class="ld-name">Berchalvis Manzenza</div>
+<div class="ld-line-wrap"><div class="ld-line" id="ldLine"></div></div>
+<div class="ld-num" id="ldNum">0%</div>
+</div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+<div class="nav-logo" onclick="go('home')">BM Studio</div>
+<ul class="nav-links" id="navLinks">
+<li><a class="act" onclick="go('home')">Accueil</a></li>
+<li><a onclick="go('about')">À Propos</a></li>
+<li><a onclick="go('services')">Services</a></li>
+<li><a onclick="go('portfolio')">Portfolio</a></li>
+<li><a onclick="go('publications')">Publications</a></li>
+<li><a onclick="go('contact')">Contact</a></li>
+</ul>
+<div class="burger" id="burger" onclick="toggleBurger()">
+<span></span><span></span><span></span>
+</div>
+</nav>
+
+<div class="mob-menu" id="mobMenu">
+<a onclick="go('home');closeMob()">Accueil</a>
+<a onclick="go('about');closeMob()">À Propos</a>
+<a onclick="go('services');closeMob()">Services</a>
+<a onclick="go('portfolio');closeMob()">Portfolio</a>
+<a onclick="go('publications');closeMob()">Publications</a>
+<a onclick="go('contact');closeMob()">Contact</a>
+</div>
+
+<!-- ══════════ PAGE HOME ══════════ -->
+<div id="pg-home" class="pg act">
+<section class="hero">
+<div class="hero-grid"></div>
+<div class="hero-orb"></div>
+<div class="hero-orb"></div>
+<div class="hero-eyebrow">Communicateur Visuel · Kinshasa, RDC</div>
+<h1 class="hero-name">
+Berchalvis
+<em>Manzenza</em>
+</h1>
+<p class="hero-role">Design Graphique &nbsp;·&nbsp; Motion Design &nbsp;·&nbsp; Photographie &nbsp;·&nbsp; Identité Visuelle</p>
+<div class="hero-btns">
+<button class="btn-main" onclick="go('portfolio')">
+<span>Voir mon travail</span><span class="ic">→</span>
+</button>
+<button class="btn-ghost" onclick="go('contact')">
+<span>Me contacter</span><span class="ic">→</span>
+</button>
+</div>
+<div class="hero-scroll">
+<span>Défiler</span>
+<div class="scroll-track"><div class="scroll-thumb"></div></div>
+</div>
+</section>
+
+<section class="section rv">
+<p class="s-eyebrow">Ce que nous faisons</p>
+<h2 class="s-title">Nos <em>expertises</em></h2>
+<div class="services-wrap">
+<div class="srv-tile rv rv-d1">
+<div class="srv-n">01</div>
+<div class="srv-ic">◇</div>
+<div class="srv-nm">Identité Visuelle</div>
+<div class="srv-desc">Logos, chartes graphiques et systèmes visuels complets.</div>
+</div>
+<div class="srv-tile rv rv-d2">
+<div class="srv-n">02</div>
+<div class="srv-ic">✦</div>
+<div class="srv-nm">Design Graphique</div>
+<div class="srv-desc">Affiches, supports print et digitaux percutants.</div>
+</div>
+<div class="srv-tile rv rv-d3">
+<div class="srv-n">03</div>
+<div class="srv-ic">◈</div>
+<div class="srv-nm">Motion Design</div>
+<div class="srv-desc">Animations et contenus vidéo en mouvement.</div>
+</div>
+<div class="srv-tile rv rv-d4">
+<div class="srv-n">04</div>
+<div class="srv-ic">◎</div>
+<div class="srv-nm">Photographie</div>
+<div class="srv-desc">Portraits, produits et photographie commerciale.</div>
+</div>
+</div>
+</section>
+
+<div class="hr"></div>
+
+<!-- TICKER -->
+<div class="ticker-sec rv">
+<div class="ticker-label">Ils nous ont fait confiance</div>
+<div class="ticker-track">
+<div class="ticker-belt" id="tickerBelt"></div>
+</div>
+</div>
+
+<!-- CTA -->
+<div class="cta-band rv">
+<div class="cta-line"></div>
+<div class="cta-line"></div>
+<h2>Démarrons votre <em>projet</em></h2>
+<p>Une idée, une vision, une collaboration ? Je suis disponible pour transformer votre concept en réalité visuelle percutante.</p>
+<button class="btn-main" onclick="go('contact')">
+<span>Me contacter</span><span class="ic">→</span>
+</button>
+</div>
+
+<footer>
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs">
+<a class="ft-s" href="#">ig</a>
+<a class="ft-s" href="#">in</a>
+<a class="ft-s" href="#">be</a>
+</div>
+</footer>
+</div>
+
+<!-- ══════════ PAGE ABOUT ══════════ -->
+<div id="pg-about" class="pg">
+<div class="about-hero-wrap">
+<div class="about-photo rv-l">
+<!--
+  ╔══════════════════════════════════════╗
+  ║  VOTRE PHOTO ICI                     ║
+  ║  Remplacez  images/about/profil.jpg  ║
+  ║  par le chemin de votre photo        ║
+  ╚══════════════════════════════════════╝
+-->
+<div class="img-box" style="width:100%;height:100%;aspect-ratio:3/4;">
+<img src="images/about/profil.jpg" alt="Berchalvis Manzenza">
+</div>
+<div class="about-photo-badge">
+<strong>5+</strong>
+<span>Années d'expérience</span>
+</div>
+<div class="about-photo-frame"></div>
+</div>
+<div class="about-text rv-r">
+<p class="tag">Qui suis-je</p>
+<h1>Berchalvis<br><em>Manzenza</em></h1>
+<p>Communicateur visuel et graphiste professionnel, je crée des expériences visuelles qui parlent, qui touchent et qui restent gravées dans les esprits.</p>
+<p>Mon parcours m'a permis de développer une sensibilité artistique unique, mêlant les richesses culturelles congolaises aux codes graphiques contemporains pour une communication authentique et percutante.</p>
+<p>Je crois que le design est bien plus qu'une esthétique — c'est un langage universel qui transforme les idées en émotions.</p>
+<div class="about-stats">
+<div class="a-stat"><strong>5+</strong><span>Années</span></div>
+<div class="a-stat"><strong>80+</strong><span>Projets</span></div>
+<div class="a-stat"><strong>40+</strong><span>Clients</span></div>
+</div>
+<button class="btn-main" onclick="go('contact')">
+<span>Travaillons ensemble</span><span class="ic">→</span>
+</button>
+</div>
+</div>
+
+<div class="hr"></div>
+
+<div class="skills-wrap rv">
+<p class="s-eyebrow">Compétences techniques</p>
+<h2 class="s-title" style="margin-bottom:48px;">Mes <em>outils</em></h2>
+<div class="skill-row"><div class="skill-name">Adobe Photoshop</div><div class="skill-track"><div class="skill-fill" data-w="95"></div></div><div class="skill-pct">95%</div></div>
+<div class="skill-row"><div class="skill-name">Adobe Illustrator</div><div class="skill-track"><div class="skill-fill" data-w="92"></div></div><div class="skill-pct">92%</div></div>
+<div class="skill-row"><div class="skill-name">Adobe InDesign</div><div class="skill-track"><div class="skill-fill" data-w="88"></div></div><div class="skill-pct">88%</div></div>
+<div class="skill-row"><div class="skill-name">After Effects</div><div class="skill-track"><div class="skill-fill" data-w="82"></div></div><div class="skill-pct">82%</div></div>
+<div class="skill-row"><div class="skill-name">Premiere Pro</div><div class="skill-track"><div class="skill-fill" data-w="78"></div></div><div class="skill-pct">78%</div></div>
+<div class="skill-row"><div class="skill-name">Figma</div><div class="skill-track"><div class="skill-fill" data-w="85"></div></div><div class="skill-pct">85%</div></div>
+</div>
+
+<div class="hr"></div>
+
+<section class="section rv">
+<p class="s-eyebrow">Ce en quoi je crois</p>
+<h2 class="s-title">Mes <em>valeurs</em></h2>
+<div class="values-grid">
+<div class="val-c rv rv-d1"><div class="val-n">01</div><div class="val-title">Excellence</div><div class="val-body">Chaque projet traité avec le plus haut niveau de soin, de précision et de professionnalisme.</div></div>
+<div class="val-c rv rv-d2"><div class="val-n">02</div><div class="val-title">Créativité</div><div class="val-body">Repousser les limites du conventionnel pour des solutions visuelles originales et mémorables.</div></div>
+<div class="val-c rv rv-d3"><div class="val-n">03</div><div class="val-title">Authenticité</div><div class="val-body">Créer des identités visuelles qui reflètent sincèrement l'essence de chaque marque.</div></div>
+<div class="val-c rv rv-d4"><div class="val-n">04</div><div class="val-title">Impact</div><div class="val-body">Concevoir des visuels qui génèrent de vraies émotions et des résultats concrets.</div></div>
+</div>
+</section>
+
+<footer>
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs"><a class="ft-s" href="#">ig</a><a class="ft-s" href="#">in</a><a class="ft-s" href="#">be</a></div>
+</footer>
+</div>
+
+<!-- ══════════ PAGE SERVICES ══════════ -->
+<div id="pg-services" class="pg">
+<section class="section" style="padding-bottom:0;">
+<p class="s-eyebrow">Ce que je propose</p>
+<h2 class="s-title">Mes <em>services</em></h2>
+</section>
+<div class="srv-list">
+
+<div class="srv-block rv">
+<div class="srv-block-img">
+<!--
+  ╔══════════════════════════════════════════╗
+  ║  IMAGE SERVICE 1 — Identité Visuelle     ║
+  ║  Remplacez : images/services/identite.jpg║
+  ╚══════════════════════════════════════════╝
+-->
+<div class="img-box">
+<img src="Web-1920-–-3-copie - Copie.jpg" alt="Identité Visuelle">
+</div>
+</div>
+<div class="srv-block-info">
+<div class="srv-block-n">01 — Service</div>
+<h3 class="srv-block-title">Identité <em>Visuelle</em></h3>
+<p class="srv-block-body">Conception d'identités de marque complètes. Logo, charte graphique, typographie, palette de couleurs — tout ce qui forge une image forte et mémorable.</p>
+<button class="btn-ghost" style="margin-top:8px;" onclick="goSrvDetail('identite')">
+<span>Voir plus</span><span class="ic">→</span>
+</button>
+</div>
+</div>
+
+<div class="srv-block reverse rv">
+<div class="srv-block-img">
+<!--
+  ╔══════════════════════════════════════════╗
+  ║  IMAGE SERVICE 2 — Design Graphique      ║
+  ║  Remplacez : images/services/design.jpg  ║
+  ╚══════════════════════════════════════════╝
+-->
+<div class="img-box">
+<img src="Free_MacBook_Pro_1.jpg" alt="Design Graphique">
+</div>
+</div>
+<div class="srv-block-info">
+<div class="srv-block-n">02 — Service</div>
+<h3 class="srv-block-title">Design <em>Graphique</em></h3>
+<p class="srv-block-body">Affiches, flyers, brochures, catalogues, packaging et tous supports de communication print et digital pour transmettre votre message avec précision.</p>
+<button class="btn-ghost" style="margin-top:8px;" onclick="goSrvDetail('design')">
+<span>Voir plus</span><span class="ic">→</span>
+</button>
+</div>
+</div>
+
+<div class="srv-block rv">
+<div class="srv-block-img">
+<!--
+  ╔══════════════════════════════════════════╗
+  ║  IMAGE SERVICE 3 — Motion Design         ║
+  ║  Remplacez : images/services/motion.jpg  ║
+  ║  OU utilisez une vidéo :                 ║
+  ║  <video autoplay muted loop playsinline> ║
+  ║    <source src="images/services/motion.mp4"> ║
+  ║  </video>                                ║
+  ╚══════════════════════════════════════════╝
+-->
+<div class="img-box">
+<img src="Free_MacBook_Pro_3.jpg" alt="Motion Design">
+</div>
+</div>
+<div class="srv-block-info">
+<div class="srv-block-n">03 — Service</div>
+<h3 class="srv-block-title">Motion <em>Design</em></h3>
+<p class="srv-block-body">Animation graphique, vidéos de marque, intros logo et contenus animés pour captiver votre audience sur tous les canaux numériques.</p>
+<button class="btn-ghost" style="margin-top:8px;" onclick="goSrvDetail('motion')">
+<span>Voir plus</span><span class="ic">→</span>
+</button>
+</div>
+</div>
+
+<div class="srv-block reverse rv">
+<div class="srv-block-img">
+<!--
+  ╔══════════════════════════════════════════╗
+  ║  IMAGE SERVICE 4 — Photographie          ║
+  ║  Remplacez : images/services/photo.jpg   ║
+  ╚══════════════════════════════════════════╝
+-->
+<div class="img-box">
+<img src="8X3A1233_1-copie.jpg" alt="Photographie">
+</div>
+</div>
+<div class="srv-block-info">
+<div class="srv-block-n">04 — Service</div>
+<h3 class="srv-block-title">Photo<em>graphie</em></h3>
+<p class="srv-block-body">Photographie commerciale, portrait professionnel, produits et événements. Des images authentiques qui valorisent votre marque et racontent votre histoire.</p>
+<button class="btn-ghost" style="margin-top:8px;" onclick="goSrvDetail('photo')">
+<span>Voir plus</span><span class="ic">→</span>
+</button>
+</div>
+</div>
+
+</div>
+<footer style="margin-top:1px;">
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs"><a class="ft-s" href="#">ig</a><a class="ft-s" href="#">in</a><a class="ft-s" href="#">be</a></div>
+</footer>
+</div>
+
+<!-- ══════════ PAGE SERVICE DETAIL ══════════ -->
+<div id="pg-srv-detail" class="pg">
+<section class="srv-detail-wrap">
+<button class="back-btn" onclick="go('services')">
+<span class="ic-back">←</span> Retour aux services
+</button>
+<div class="det-header">
+<p class="s-eyebrow" id="detEye">Service</p>
+<h2 class="det-title" id="detTitle">Titre <em id="detTitleEm">Service</em></h2>
+<p class="det-body" id="detBody">Description.</p>
+</div>
+<div class="det-imgs">
+<!--
+  ╔══════════════════════════════════════════════════╗
+  ║  4 IMAGES DE DÉTAIL PAR SERVICE                  ║
+  ║  Elles sont chargées dynamiquement via JS        ║
+  ║  Modifiez le tableau SRV_DATA dans le JavaScript ║
+  ╚══════════════════════════════════════════════════╝
+-->
+<div class="det-img-box img-box" id="dBox0"><img id="dImg0" alt=""></div>
+<div class="det-img-box img-box" id="dBox1"><img id="dImg1" alt=""></div>
+<div class="det-img-box img-box" id="dBox2"><img id="dImg2" alt=""></div>
+<div class="det-img-box img-box" id="dBox3"><img id="dImg3" alt=""></div>
+</div>
+</section>
+<footer>
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs"><a class="ft-s" href="#">ig</a><a class="ft-s" href="#">in</a><a class="ft-s" href="#">be</a></div>
+</footer>
+</div>
+
+<!-- ══════════ PAGE PORTFOLIO ══════════ -->
+<div id="pg-portfolio" class="pg">
+<section class="section" style="padding-bottom:0;">
+<p class="s-eyebrow">Mes réalisations</p>
+<h2 class="s-title">Mon <em>portfolio</em></h2>
+</section>
+<div class="port-cats">
+
+<div class="port-cat rv">
+<div class="pc-info">
+<div class="pc-n">01</div>
+<div class="pc-title">Design <em>Graphique</em></div>
+<div class="pc-desc">Affiches, supports de communication, identité print — des créations graphiques qui marquent les esprits.</div>
+<button class="btn-ghost" onclick="goPortDetail('design','Design','Graphique')">
+<span>Voir le portfolio</span><span class="ic">→</span>
+</button>
+</div>
+<!--
+  ╔══════════════════════════════════════════╗
+  ║  4 APERÇUS PORTFOLIO — Design Graphique  ║
+  ║  Remplacez les src par vos images        ║
+  ╚══════════════════════════════════════════╝
+-->
+<div class="pc-thumb">
+<div class="pc-mini"><img src="images/portfolio/design/design-1.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/design/design-2.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/design/design-3.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/design/design-4.jpg" alt=""></div>
+</div>
+</div>
+
+<div class="port-cat rv">
+<div class="pc-thumb">
+<div class="pc-mini"><img src="LOGO-2 copie.png" alt=""></div>
+<div class="pc-mini"><img src="LOGO-2.jpg" alt=""></div>
+<div class="pc-mini"><img src="STORY.jpg" alt=""></div>
+<div class="pc-mini"><img src="cv aba - Copie.png" alt=""></div>
+</div>
+<div class="pc-info" style="border-left:1px solid rgba(255,255,255,0.04);border-right:none;">
+<div class="pc-n">02</div>
+<div class="pc-title">Identité <em>Visuelle</em></div>
+<div class="pc-desc">Logos, chartes graphiques et systèmes visuels complets pour des marques fortes et cohérentes.</div>
+<button class="btn-ghost" onclick="goPortDetail('identite','Identité','Visuelle')">
+<span>Voir le portfolio</span><span class="ic">→</span>
+</button>
+</div>
+</div>
+
+<div class="port-cat rv">
+<div class="pc-info">
+<div class="pc-n">03</div>
+<div class="pc-title">Motion <em>Design</em></div>
+<div class="pc-desc">Animations, vidéos de marque et contenus animés pour les médias numériques.</div>
+<button class="btn-ghost" onclick="goPortDetail('motion','Motion','Design')">
+<span>Voir le portfolio</span><span class="ic">→</span>
+</button>
+</div>
+<div class="pc-thumb">
+<div class="pc-mini"><img src="images/portfolio/motion/motion-1.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/motion/motion-2.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/motion/motion-3.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/motion/motion-4.jpg" alt=""></div>
+</div>
+</div>
+
+<div class="port-cat rv">
+<div class="pc-thumb">
+<div class="pc-mini"><img src="images/portfolio/photo/photo-1.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/photo/photo-2.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/photo/photo-3.jpg" alt=""></div>
+<div class="pc-mini"><img src="images/portfolio/photo/photo-4.jpg" alt=""></div>
+</div>
+<div class="pc-info" style="border-left:1px solid rgba(255,255,255,0.04);border-right:none;">
+<div class="pc-n">04</div>
+<div class="pc-title">Photo<em>graphie</em></div>
+<div class="pc-desc">Portraits, photographie commerciale et événements — des images qui racontent des histoires.</div>
+<button class="btn-ghost" onclick="goPortDetail('photo','Photo','graphie')">
+<span>Voir le portfolio</span><span class="ic">→</span>
+</button>
+</div>
+</div>
+
+</div>
+<footer style="margin-top:1px;">
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs"><a class="ft-s" href="#">ig</a><a class="ft-s" href="#">in</a><a class="ft-s" href="#">be</a></div>
+</footer>
+</div>
+
+<!-- ══════════ PAGE PORTFOLIO DETAIL ══════════ -->
+<div id="pg-port-detail" class="pg">
+<section class="port-detail-wrap">
+<button class="back-btn" onclick="go('portfolio')">
+<span class="ic-back">←</span> Retour au portfolio
+</button>
+<p class="s-eyebrow" id="pdEye">Portfolio</p>
+<h2 class="s-title" style="margin-bottom:30px;">
+<span id="pdT1">Design</span> <em id="pdT2">Graphique</em>
+</h2>
+<div class="port-masonry" id="portGrid"></div>
+</section>
+<footer>
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs"><a class="ft-s" href="#">ig</a><a class="ft-s" href="#">in</a><a class="ft-s" href="#">be</a></div>
+</footer>
+</div>
+
+<!-- ══════════ PAGE PUBLICATIONS ══════════ -->
+<div id="pg-publications" class="pg">
+<section class="section" style="padding-bottom:0;">
+<p class="s-eyebrow">Mes articles & réflexions</p>
+<h2 class="s-title">Publi<em>cations</em></h2>
+</section>
+<div class="pub-list">
+
+<div class="pub-block rv">
+<div class="pub-img">
+<!--
+  ╔══════════════════════════════════════════════╗
+  ║  IMAGE ARTICLE 1                             ║
+  ║  Remplacez : images/publications/article-1.jpg║
+  ╚══════════════════════════════════════════════╝
+-->
+<div class="img-box">
+<img src="images/publications/article-1.jpg" alt="Article 1">
+</div>
+</div>
+<div class="pub-info">
+<div class="pub-date">15 Novembre 2024</div>
+<div class="pub-cat">Design Thinking</div>
+<div class="pub-title">L'Art de Communiquer Visuellement</div>
+<div class="pub-excerpt">Exploration des codes visuels africains et leur intégration dans le design contemporain pour une communication authentique et percutante.</div>
+<button class="pub-read">Lire l'article <span class="ic">→</span></button>
+</div>
+</div>
+
+<div class="pub-block rv">
+<div class="pub-img">
+<div class="img-box">
+<img src="images/publications/article-2.jpg" alt="Article 2">
+</div>
+</div>
+<div class="pub-info">
+<div class="pub-date">02 Octobre 2024</div>
+<div class="pub-cat">Tendances</div>
+<div class="pub-title">Tendances du Design Graphique 2024</div>
+<div class="pub-excerpt">Analyse des grandes tendances visuelles qui marquent cette année et leur impact sur la communication visuelle en Afrique et dans le monde.</div>
+<button class="pub-read">Lire l'article <span class="ic">→</span></button>
+</div>
+</div>
+
+<div class="pub-block rv">
+<div class="pub-img">
+<div class="img-box">
+<img src="images/publications/article-3.jpg" alt="Article 3">
+</div>
+</div>
+<div class="pub-info">
+<div class="pub-date">18 Septembre 2024</div>
+<div class="pub-cat">Tutoriel</div>
+<div class="pub-title">Créer une Identité Visuelle Forte</div>
+<div class="pub-excerpt">De la recherche conceptuelle à la livraison finale — ma méthodologie complète pour concevoir des identités visuelles mémorables et efficaces.</div>
+<button class="pub-read">Lire l'article <span class="ic">→</span></button>
+</div>
+</div>
+
+</div>
+<footer style="margin-top:1px;">
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs"><a class="ft-s" href="#">ig</a><a class="ft-s" href="#">in</a><a class="ft-s" href="#">be</a></div>
+</footer>
+</div>
+
+<!-- ══════════ PAGE CONTACT ══════════ -->
+<div id="pg-contact" class="pg">
+<section class="section">
+<p class="s-eyebrow">Me joindre</p>
+<h2 class="s-title">Travaillons <em>ensemble</em></h2>
+<div class="contact-wrap">
+<div class="c-left rv-l">
+<h3>Démarrons votre <em>projet</em></h3>
+<p>Vous avez une idée, un projet ou une collaboration en tête ? Je suis disponible pour en discuter et transformer votre vision en réalité visuelle percutante.</p>
+<div class="c-items">
+<div class="c-item">
+<div class="c-ic">📍</div>
+<div class="c-t">
+<div class="lbl">Localisation</div>
+<!--✏️ Modifiez votre adresse-->
+<div class="val">Kinshasa, République Démocratique du Congo</div>
+</div>
+</div>
+<div class="c-item">
+<div class="c-ic">✉</div>
+<div class="c-t">
+<div class="lbl">Email</div>
+<!--✏️ Modifiez votre email-->
+<div class="val">berchalvis@gmail.com</div>
+</div>
+</div>
+<div class="c-item">
+<div class="c-ic">📱</div>
+<div class="c-t">
+<div class="lbl">Téléphone / WhatsApp</div>
+<!--✏️ Modifiez votre numéro-->
+<div class="val">+243 976 256 590</div>
+</div>
+</div>
+<div class="c-item">
+<div class="c-ic">ig</div>
+<div class="c-t">
+<div class="lbl">Instagram</div>
+<!--✏️ Modifiez votre Instagram-->
+<div class="val">Berchalvis590</div>
+</div>
+</div>
+<div class="c-item">
+<div class="c-ic">in</div>
+<div class="c-t">
+<div class="lbl">LinkedIn</div>
+<!--✏️ Modifiez votre LinkedIn-->
+<div class="val">linkedin.com/in/berchalvis-manzenza</div>
+</div>
+</div>
+<div class="c-item">
+<div class="c-ic">🕐</div>
+<div class="c-t">
+<div class="lbl">Disponibilité</div>
+<div class="val"></div>
+</div>
+</div>
+</div>
+</div>
+<form class="c-form rv-r" onsubmit="return false;">
+<div class="fg"><input type="text" id="fn" placeholder="x"><label for="fn">Votre Nom</label></div>
+<div class="fg"><input type="email" id="fe" placeholder="x"><label for="fe">Votre Email</label></div>
+<div class="fg"><input type="text" id="fs" placeholder="x"><label for="fs">Sujet</label></div>
+<div class="fg"><textarea id="fm" placeholder="x"></textarea><label for="fm">Votre Message</label></div>
+<button class="btn-main" type="submit">
+<span>Envoyer le Message</span><span class="ic">→</span>
+</button>
+</form>
+</div>
+</section>
+<footer>
+<div class="ft-logo" onclick="go('home')">BM Studio</div>
+<div class="ft-copy">© 2024 Berchalvis Manzenza. Tous droits réservés.</div>
+<div class="ft-socs"><a class="ft-s" href="#">ig</a><a class="ft-s" href="#">in</a><a class="ft-s" href="#">be</a></div>
+</footer>
+</div>
+
+<script>
+/* ══ CURSOR ══ */
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,fx=0,fy=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.left=mx+'px';cur.style.top=my+'px';
+});
+(function aC(){
+  fx+=(mx-fx)*.1;fy+=(my-fy)*.1;
+  cur2.style.left=fx+'px';cur2.style.top=fy+'px';
+  requestAnimationFrame(aC);
+})();
+
+/* ══ LOADER ══ */
+window.addEventListener('load',()=>{
+  const loader=document.getElementById('loader');
+  const line=document.getElementById('ldLine');
+  const num=document.getElementById('ldNum');
+  loader.classList.add('reveal-ld');
+  let p=0;
+  const iv=setInterval(()=>{
+    p+=Math.random()*15+5;
+    if(p>100)p=100;
+    line.style.width=p+'%';
+    num.textContent=Math.floor(p)+'%';
+    if(p>=100){
+      clearInterval(iv);
+      setTimeout(()=>loader.classList.add('hide'),600);
+    }
+  },100);
+});
+
+/* ══ NAV SCROLL ══ */
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>30);
+});
+
+/* ══ BURGER ══ */
+function toggleBurger(){
+  document.getElementById('burger').classList.toggle('open');
+  document.getElementById('mobMenu').classList.toggle('open');
+}
+function closeMob(){
+  document.getElementById('burger').classList.remove('open');
+  document.getElementById('mobMenu').classList.remove('open');
+}
+
+/* ══ PAGES ══ */
+const NAV_MAP={home:0,about:1,services:2,portfolio:3,publications:4,contact:5};
+const ALL=['home','about','services','portfolio','publications','contact','srv-detail','port-detail'];
+
+function go(id){
+  ALL.forEach(p=>{
+    const el=document.getElementById('pg-'+p);
+    if(el)el.classList.remove('act');
+  });
+  const t=document.getElementById('pg-'+id);
+  if(t){
+    t.classList.add('act');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('.nav-links a').forEach(l=>l.classList.remove('act'));
+  if(NAV_MAP[id]!==undefined)
+    document.querySelectorAll('.nav-links a')[NAV_MAP[id]].classList.add('act');
+  setTimeout(()=>{
+    setupReveal();
+    if(id==='about')animSkills();
+  },100);
+}
+
+/* ══ SERVICE DETAIL DATA ══
+   ✏️ Modifiez les chemins src des images pour chaque service
+══════════════════════════ */
+const SRV_DATA={
+  identite:{
+    eye:'01 — Identité Visuelle',
+    t1:'Identité',t2:'Visuelle',
+    body:'Conception d\'identités de marque complètes et cohérentes. Logo, charte graphique, système typographique, palette de couleurs — tout ce qui forge une image forte, unique et mémorable.',
+    imgs:[
+      {src:'COLOR-2.Sjpg.jpg',alt:'Projet identité 1'},
+      {src:'TYUIOP.jpg',alt:'Projet identité 2'},
+      {src:'FGHHHJJK.jpg',alt:'Projet identité 3'},
+      {src:'images/services/detail/identite-4.jpg',alt:'Projet identité 4'},
+    ]
+  },
+  design:{
+    eye:'02 — Design Graphique',
+    t1:'Design',t2:'Graphique',
+    body:'Affiches, flyers, brochures, catalogues, packaging et tous supports de communication print et digital. Des créations qui captivent et transmettent votre message avec précision.',
+    imgs:[
+      {src:'Web-1920-–-copie.jpg',alt:'Projet design 1'},
+      {src:'O8G7BZ1-copie.jpg',alt:'Projet design 2'},
+      {src:'ETYYEU.jpg',alt:'Projet design 3'},
+      {src:'TYIIOOOVOOF.jpg',alt:'Projet design 4'},
+      {src:'images/services/detail/design-4.jpg',alt:'Projet design 4'},
+    ]
+  },
+  motion:{
+    eye:'03 — Motion Design',
+    t1:'Motion',t2:'Design',
+    body:'Animation graphique, vidéos de marque, intros logo et contenus animés pour captiver votre audience sur tous les canaux numériques.',
+    imgs:[
+      {src:'images/services/detail/motion-1.jpg',alt:'Projet motion 1'},
+      {src:'images/services/detail/motion-2.jpg',alt:'Projet motion 2'},
+      {src:'images/services/detail/motion-3.jpg',alt:'Projet motion 3'},
+      {src:'images/services/detail/motion-4.jpg',alt:'Projet motion 4'},
+    ]
+  },
+  photo:{
+    eye:'04 — Photographie',
+    t1:'Photo',t2:'graphie',
+    body:'Photographie commerciale, portrait professionnel, produits et événements. Des images authentiques qui valorisent votre marque et racontent votre histoire.',
+    imgs:[
+      {src:'DSC_2770.jpg',alt:'Projet photo 1'},
+      {src:'ALM_1s436.jpg',alt:'Projet photo 2'},
+      {src:'SAV_2878.jpg',alt:'Projet photo 3'},
+      {src:'DSC_5319HHH.jpg',alt:'Projet photo 4'},
+    ]
+  }
+};
+
+function goSrvDetail(key){
+  const d=SRV_DATA[key];
+  document.getElementById('detEye').textContent=d.eye;
+  document.getElementById('detTitle').childNodes[0].textContent=d.t1+' ';
+  document.getElementById('detTitleEm').textContent=d.t2;
+  document.getElementById('detBody').textContent=d.body;
+  d.imgs.forEach((img,i)=>{
+    const el=document.getElementById('dImg'+i);
+    if(el){el.src=img.src;el.alt=img.alt;}
+  });
+  go('srv-detail');
+}
+
+/* ══ PORTFOLIO DATA ══
+   ✏️ Modifiez les chemins src et titres de vos projets
+══════════════════════ */
+const PORT_DATA={
+  design:{
+    t1:'Design',t2:'Graphique',
+    items:[
+      {src:'images/portfolio/design/design-1.jpg',titre:'Affiche Event',cat:'Design Graphique'},
+      {src:'images/portfolio/design/design-2.jpg',titre:'Flyer Commercial',cat:'Design Graphique'},
+      {src:'images/portfolio/design/design-3.jpg',titre:'Brochure Corporate',cat:'Design Graphique'},
+      {src:'images/portfolio/design/design-4.jpg',titre:'Packaging',cat:'Design Graphique'},
+      {src:'images/portfolio/design/design-5.jpg',titre:'Affiche Culturelle',cat:'Design Graphique'},
+      {src:'images/portfolio/design/design-6.jpg',titre:'Newsletter',cat:'Design Graphique'},
+      {src:'images/portfolio/design/design-7.jpg',titre:'Catalogue',cat:'Design Graphique'},
+      {src:'images/portfolio/design/design-8.jpg',titre:'Banner Digital',cat:'Design Graphique'},
+    ]
+  },
+  identite:{
+    t1:'Identité',t2:'Visuelle',
+    items:[
+      {src:'images/portfolio/identite/id-1.jpg',titre:'Logo Brand X',cat:'Identité Visuelle'},
+      {src:'images/portfolio/identite/id-2.jpg',titre:'Charte Graphique',cat:'Identité Visuelle'},
+      {src:'images/portfolio/identite/id-3.jpg',titre:'Système Visuel',cat:'Identité Visuelle'},
+      {src:'images/portfolio/identite/id-4.jpg',titre:'Logo Restaurant',cat:'Identité Visuelle'},
+      {src:'images/portfolio/identite/id-5.jpg',titre:'Brand Book',cat:'Identité Visuelle'},
+      {src:'images/portfolio/identite/id-6.jpg',titre:'Logo ONG',cat:'Identité Visuelle'},
+    ]
+  },
+  motion:{
+    t1:'Motion',t2:'Design',
+    items:[
+      {src:'images/portfolio/motion/motion-1.jpg',titre:'Intro Logo',cat:'Motion Design'},
+      {src:'images/portfolio/motion/motion-2.jpg',titre:'Story Animée',cat:'Motion Design'},
+      {src:'images/portfolio/motion/motion-3.jpg',titre:'Vidéo Marque',cat:'Motion Design'},
+      {src:'images/portfolio/motion/motion-4.jpg',titre:'Animation UI',cat:'Motion Design'},
+      {src:'images/portfolio/motion/motion-5.jpg',titre:'Reel Social',cat:'Motion Design'},
+      {src:'images/portfolio/motion/motion-6.jpg',titre:'Motion Pub',cat:'Motion Design'},
+    ]
+  },
+  photo:{
+    t1:'Photo',t2:'graphie',
+    items:[
+      {src:'images/portfolio/photo/photo-1.jpg',titre:'Portrait Pro',cat:'Photographie'},
+      {src:'images/portfolio/photo/photo-2.jpg',titre:'Photo Produit',cat:'Photographie'},
+      {src:'images/portfolio/photo/photo-3.jpg',titre:'Événement',cat:'Photographie'},
+      {src:'images/portfolio/photo/photo-4.jpg',titre:'Photo Corporate',cat:'Photographie'},
+      {src:'images/portfolio/photo/photo-5.jpg',titre:'Mode',cat:'Photographie'},
+      {src:'images/portfolio/photo/photo-6.jpg',titre:'Reportage',cat:'Photographie'},
+      {src:'images/portfolio/photo/photo-7.jpg',titre:'Architecture',cat:'Photographie'},
+      {src:'images/portfolio/photo/photo-8.jpg',titre:'Portrait Art',cat:'Photographie'},
+    ]
+  }
+};
+
+function goPortDetail(key,t1,t2){
+  const d=PORT_DATA[key];
+  document.getElementById('pdEye').textContent='Portfolio — '+t1+' '+t2;
+  document.getElementById('pdT1').textContent=t1+' ';
+  document.getElementById('pdT2').textContent=t2;
+  const grid=document.getElementById('portGrid');
+  grid.innerHTML='';
+  d.items.forEach(item=>{
+    const div=document.createElement('div');
+    div.className='p-item';
+    div.innerHTML=`
+      <img src="${item.src}" alt="${item.titre}">
+      <div class="p-item-ov">
+        <h4>${item.titre}</h4>
+        <p>${item.cat}</p>
+      </div>`;
+    grid.appendChild(div);
+  });
+  go('port-detail');
+}
+
+/* ══ TICKER LOGOS ══
+   ✏️ Ajoutez vos logos dans le tableau LOGOS
+   Mettez le chemin de votre image dans src
+══════════════════════ */
+(function buildTicker(){
+  const belt=document.getElementById('tickerBelt');
+  const LOGOS=[
+    {src:'TFSTUDIO.png',alt:'C.A.jpg'},
+    {src:'TFSCHOOL.png',alt:'Client 2'},
+    {src:'HHHHHHH.png',alt:'Client 3'},
+    {src:'cv aba.png',alt:'Client 4'},
+    {src:'fffffff copie.png',alt:'Client 5'},
+    {src:'CARTESIENS LOGO ROUGE copie 2.png',alt:'Client 6'},
+    {src:'STORY CREATION.png',alt:'Client 7'},
+    {src:'ESPRIT.png',alt:'Client 8'},
+  ];
+  const all=[...LOGOS,...LOGOS];
+  belt.innerHTML=all.map(l=>`
+    <div class="tick-logo">
+      <img src="${l.src}" alt="${l.alt}">
+    </div>`).join('');
+})();
+
+/* ══ SKILLS ══ */
+function animSkills(){
+  document.querySelectorAll('.skill-fill').forEach(el=>{
+    setTimeout(()=>{el.style.width=el.dataset.w+'%';},200);
+  });
+}
+
+/* ══ SCROLL REVEAL ══ */
+function setupReveal(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach((e,i)=>{
+      if(e.isIntersecting){
+        setTimeout(()=>e.target.classList.add('vis'),i*80);
+        obs.unobserve(e.target);
+      }
+    });
+  },{threshold:.12});
+  document.querySelectorAll('.pg.act .rv,.pg.act .rv-l,.pg.act .rv-r')
+    .forEach(el=>obs.observe(el));
+}
+
+/* ══ INIT ══ */
+go('home');
+</script>
+</body>
+</html>
